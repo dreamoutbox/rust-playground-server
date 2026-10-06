@@ -2,10 +2,10 @@
 FROM rust:1-slim-bookworm AS builder
 
 WORKDIR /build
-COPY rust-playground-server/Cargo.toml rust-playground-server/Cargo.lock ./
-COPY rust-playground-server/template/ ./template/
-COPY rust-playground-server/static/ ./static/
-COPY rust-playground-server/src/ ./src/
+COPY Cargo.toml Cargo.lock ./
+COPY template/ ./template/
+COPY static/ ./static/
+COPY src/ ./src/
 
 RUN cargo build --release
 
@@ -24,6 +24,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app
 
 COPY --from=builder /build/target/release/rust-playground-server /app/rust-playground-server
+COPY static/ /app/static/
 COPY assets/firecracker /app/assets/firecracker
 COPY assets/vmlinux* /app/assets/
 COPY assets/rust-toolchain.ext4 /app/assets/rust-toolchain.ext4

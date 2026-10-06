@@ -8,14 +8,14 @@ use std::time::{Duration, Instant};
 use anyhow::{Context, Result};
 use axum::Router;
 use axum::extract::State;
-use axum::response::{Html, IntoResponse, Json};
-use axum::routing::{get, post};
+use axum::response::{IntoResponse, Json};
+use axum::routing::post;
 use serde::{Deserialize, Serialize};
 use tokio::sync::Semaphore;
+use tower_http::services::ServeDir;
 use tracing::{error, info, warn};
 use uuid::Uuid;
 
-const INDEX_HTML: &str = include_str!("../static/index.html");
 const DEFAULT_TIMEOUT_SECS: u64 = 30;
 const MAX_CONCURRENT_RUNS: usize = 4;
 
@@ -40,8 +40,12 @@ struct RunResponse {
     elapsed_ms: u128,
 }
 
-async fn index_handler() -> impl IntoResponse {
-    Html(INDEX_HTML)
+fn build_router(state: AppState) -> Router {
+    let static_dir = state.repo_root.join("static");
+    Router::new()
+        .route("/run", post(run_handler))
+        .fallback_service(ServeDir::new(static_dir))
+        .with_state(state)
 }
 
 async fn run_handler(
@@ -159,10 +163,7 @@ async fn main() -> Result<()> {
         timeout_duration: Duration::from_secs(timeout_secs),
     };
 
-    let app = Router::new()
-        .route("/", get(index_handler))
-        .route("/run", post(run_handler))
-        .with_state(state);
+    let app = build_router(state);
 
     let port: u16 = std::env::var("PORT")
         .ok()
@@ -183,4 +184,53 @@ async fn main() -> Result<()> {
 
     info!("rust-playground-server shutdown complete");
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use axum::body::Body;
+    use axum::http::{Request, StatusCode};
+    use tower::ServiceExt;
+
+    #[tokio::test]
+    async fn test_serve_static_files() {
+        let repo_root = runner::find_repo_root().expect("failed to locate repo root");
+        let state = AppState {
+            repo_root: Arc::new(repo_root),
+            semaphore: Arc::new(Semaphore::new(1)),
+            timeout_duration: Duration::from_secs(5),
+        };
+        let app = build_router(state);
+
+        let res = app
+            .clone()
+            .oneshot(Request::builder().uri("/").body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+        assert_eq!(res.status(), StatusCode::OK);
+
+        let res = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .uri("/main.css")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(res.status(), StatusCode::OK);
+
+        let res = app
+            .oneshot(
+                Request::builder()
+                    .uri("/main.js")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(res.status(), StatusCode::OK);
+    }
 }

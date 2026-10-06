@@ -1,9 +1,6 @@
 services:
   playground-server:
-    build:
-      context: ..
-      dockerfile: rust-playground-server/Dockerfile
-    image: rust-playground-server:latest
+    image: dreamoutbox/rust-playground-server:latest
     container_name: rust-playground-server
     restart: unless-stopped
     ports:
@@ -13,7 +10,7 @@ services:
     tmpfs:
       - /tmp:rw,exec
     volumes:
-      - ../assets:/app/assets:ro
+      - ./assets:/app/assets:ro
     environment:
       - PORT=3000
       - REPO_ROOT=/app

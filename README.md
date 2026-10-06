@@ -27,26 +27,26 @@ A self-hosted Rust playground inspired by [play.rust-lang.org](https://play.rust
 ### Host Native
 1. **Start the server**:
    ```bash
-   ./rust-playground-server/start.sh
+   ./start.sh
    ```
 2. **Build and Test**:
    ```bash
-   ./rust-playground-server/build.sh
-   ./rust-playground-server/test.sh
+   ./build.sh
+   ./test.sh
    ```
 
 ### Docker & Docker Compose
 1. **Build image**:
    ```bash
-   ./rust-playground-server/dev-build-image.sh
+   ./dev-build-image.sh
    ```
 2. **Start with Docker Compose**:
    ```bash
-   ./rust-playground-server/dev-start-compose.sh
+   ./start-compose.sh
    ```
 3. **Stop Docker Compose**:
    ```bash
-   docker compose -f rust-playground-server/docker-compose.yml down
+   docker compose down
    ```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
