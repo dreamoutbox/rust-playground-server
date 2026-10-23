@@ -19,4 +19,5 @@ cargo release "$LEVEL" \
     --tag-prefix "" \
     --tag-name 'v{{version}}' \
     --no-publish \
+    --no-push \
     --execute
