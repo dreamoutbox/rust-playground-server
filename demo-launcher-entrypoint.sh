@@ -7,7 +7,8 @@
 #   REPO_URL=... BRANCH=main APP_DIR=/opt/app APP_USER=deploy ./bootstrap.sh
 set -euo pipefail
 
-REPO_URL="${REPO_URL:?REPO_URL is required}"
+# REPO_URL="${REPO_URL:?REPO_URL is required}"
+REPO_URL="https://github.com/dreamoutbox/rust-playground-server.git"
 BRANCH="${BRANCH:-main}"
 APP_DIR="${APP_DIR:-/opt/app}"
 APP_USER="${APP_USER:-${SUDO_USER:-root}}"
