@@ -9,8 +9,8 @@ services:
       - /dev/kvm:/dev/kvm
     tmpfs:
       - /tmp:rw,exec
-    volumes:
-      - ./assets:/app/assets:ro
+    # volumes:
+    #   - ./assets:/app/assets:ro
     environment:
       - PORT=3000
       - REPO_ROOT=/app

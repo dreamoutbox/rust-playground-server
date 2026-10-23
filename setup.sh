@@ -11,7 +11,7 @@ TARGET_USER="${SUDO_USER:-$USER}"
 
 mkdir -p "${ASSETS_DIR}"
 
-ensure_base_assets() {
+ensure_assets() {
     local fc_bin="${ASSETS_DIR}/firecracker"
     local kernel_link="${ASSETS_DIR}/vmlinux"
     local apk_bin="${ASSETS_DIR}/apk.static"
@@ -65,6 +65,28 @@ ensure_toolchain_rootfs() {
     rm -rf "${extract_dir}"
 }
 
+# Ensure command is installed, if not found install with apt
+# Usage: ensure_cmd <command> <apt-package>
+ensure_cmd() {
+    local cmd=$1 pkg=$2 sudo=
+
+    # Search sbin dirs too: non-root PATH often omits them
+    if command -v "$cmd" >/dev/null 2>&1 || [ -x "/sbin/$cmd" ] || [ -x "/usr/sbin/$cmd" ]; then
+        return 0
+    fi
+
+    [ "$(id -u)" -eq 0 ] || sudo=sudo
+
+    echo "Installing $pkg (provides $cmd)..." >&2
+    $sudo env DEBIAN_FRONTEND=noninteractive apt-get update -qq &&
+    $sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends "$pkg" || {
+        echo "Failed to install $pkg" >&2
+        return 1
+    }
+
+    command -v "$cmd" >/dev/null 2>&1 || [ -x "/sbin/$cmd" ] || [ -x "/usr/sbin/$cmd" ]
+}
+
 fix_ownership() {
     if [ -n "${SUDO_USER:-}" ] && [ "$EUID" -eq 0 ]; then
         chown -R "${SUDO_USER}:${SUDO_USER}" "${ASSETS_DIR}" 2>/dev/null || true
@@ -72,7 +94,10 @@ fix_ownership() {
 }
 
 main() {
-    ensure_base_assets
+    ensure_cmd truncate   coreutils  || exit 1
+    ensure_cmd mkfs.ext4  e2fsprogs  || exit 1
+    
+    ensure_assets
     ensure_toolchain_rootfs
     fix_ownership
 

@@ -24,10 +24,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app
 
 COPY --from=builder /build/target/release/rust-playground-server /app/rust-playground-server
+
 COPY static/ /app/static/
-COPY assets/firecracker /app/assets/firecracker
-COPY assets/vmlinux* /app/assets/
-COPY assets/rust-toolchain.ext4 /app/assets/rust-toolchain.ext4
+
+# COPY assets/firecracker /app/assets/firecracker
+# COPY assets/vmlinux* /app/assets/
+# COPY assets/rust-toolchain.ext4 /app/assets/rust-toolchain.ext4
+COPY assets/ /app/assets/
 
 ENV REPO_ROOT=/app
 ENV PORT=3000

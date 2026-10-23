@@ -1,3 +1,3 @@
 fn main() {
-    println!("Hello, world from rust_example!");
+    println!("Hello, world! from rust_example!");
 }
