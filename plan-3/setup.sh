@@ -111,7 +111,12 @@ ensure_kernel() {
         kernel_key="$(curl -fsSL "$s3?list-type=2&prefix=${ci_prefix}${ARCH}/vmlinux-" \
             | grep -oP "(?<=<Key>)(${ci_prefix}${ARCH}/vmlinux-[0-9]+\.[0-9]+\.[0-9]{1,3})(?=</Key>)" \
             | sort -V | tail -n 1)"
-        wget -q --show-progress -O "${ASSETS_DIR}/$(basename "${kernel_key}")" "$s3/${kernel_key}"
+        # Only show progress on an interactive local terminal, not in CI logs
+        local wget_opts=(-q)
+        if [ -t 2 ] && [ -z "${CI:-}" ]; then
+            wget_opts+=(--show-progress)
+        fi
+        wget "${wget_opts[@]}" -O "${ASSETS_DIR}/$(basename "${kernel_key}")" "$s3/${kernel_key}"
         kernel_file="${ASSETS_DIR}/$(basename "${kernel_key}")"
     fi
 

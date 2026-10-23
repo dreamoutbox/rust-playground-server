@@ -45,10 +45,13 @@ ensure_toolchain_rootfs() {
     tar -xzf "${tarball}" -C "${extract_dir}"
 
     echo "Installing Rust toolchain into toolchain rootfs using apk.static..."
+    # Skip package scripts/triggers: non-root apk wraps them in unshare(), which
+    # GitHub runners forbid. The minirootfs already has the busybox symlinks and
+    # the guest builds offline, so no trigger work is needed.
     "${ASSETS_DIR}/apk.static" \
         --root "${extract_dir}" \
         --no-progress \
-        add rust cargo
+        add --no-scripts rust cargo
 
     echo "Installing guest /init..."
     cp "${init_script}" "${extract_dir}/init"
